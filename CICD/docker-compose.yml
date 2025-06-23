@@ -11,3 +11,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - C:\project\likelion:/var/jenkins_home/workspace/backend5_Test_local  # 프로젝트 연결
     restart: unless-stopped
+    networks:
+      - prod_server
+
+networks:
+  prod_server:
+    external: true

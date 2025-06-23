@@ -1,0 +1,66 @@
+FROM jenkins/jenkins:lts-jdk17
+
+USER root
+
+Docker CLI 설치
+RUN apt-get update && \
+    apt-get install -y \
+    docker.io \
+    docker-compose && \
+    apt-get clean
+
+
+Docker 명령어가 없다고 나올 수 있으니 /usr/bin에 심볼릭 링크도 설정 (보완책)
+RUN ln -s /usr/bin/docker.io /usr/bin/docker || true
+
+Jenkins 유저도 docker 실행할 수 있도록 그룹 추가
+RUN usermod -aG docker jenkins
+
+
+USER jenkins
+[강사] 신은식 — 오전 10:17
+pipeline {
+    agent any
+
+    environment {
+        PROJECT_DIR = '/var/jenkins_home/workspace/backend5/backendProject'   // 백앤드 서버 프로젝트 폴더
+        COMPOSE_FILE = 'docker-compose.backend.yml'
+    }
+
+    stages {
+
+          stage('Cleanup Containers') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh "docker-compose -f ${COMPOSE_FILE} down"
+                }
+             }
+          }
+
+
+        stage('Build') {
+          steps {
+            dir("${PROJECT_DIR}") {
+              sh 'chmod +x gradlew'
+              sh './gradlew clean build'
+            }
+          }
+        }
+
+
+        stage('Compose Up') {
+          steps {
+            dir("${PROJECT_DIR}") {
+              sh "docker-compose -f ${COMPOSE_FILE} up -d --build"
+            }
+          }
+        }
+
+        stage('Restart Nginx') {
+          steps {
+            sh 'docker restart nginx || true'
+          }
+        }
+
+      }
+}

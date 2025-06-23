@@ -9,6 +9,15 @@ pipeline {
 
     stages {
 
+        stage('Build') {
+          steps {
+            dir("${PROJECT_DIR}") {
+              sh 'chmod +x gradlew' // gradle 실행 권한 부여
+              sh './gradlew clean build'
+            }
+          }
+        }
+        
           stage('Cleanup Containers') {
             steps {
                 dir("${COMPOSE_DIR}") {
@@ -18,14 +27,6 @@ pipeline {
           }
 
 
-        stage('Build') {
-          steps {
-            dir("${PROJECT_DIR}") {
-              sh 'chmod +x gradlew' // gradle 실행 권한 부여
-              sh './gradlew clean build'
-            }
-          }
-        }
 
         stage('Docker Build') {
           steps {

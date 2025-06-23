@@ -4,4 +4,4 @@ From nginx:latest
 Run rm /etc/nginx/nginx.conf
 
 # 커스텀 nginx.conf 복사
-COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf

@@ -9,7 +9,7 @@ import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
-@Profile("!test")
+//@Profile("!test")
 @Configuration
 @RequiredArgsConstructor
 public class RedisConfig {
