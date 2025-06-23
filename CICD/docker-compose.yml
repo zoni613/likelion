@@ -9,7 +9,7 @@ services:
     volumes:
       - ./volumes/jenkins:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-      - C:\project\likelion:/var/jenkins_home/workspace/backend5_Test_local  # 프로젝트 연결
+      - C:\project\likelion\backendProject:/var/jenkins_home/workspace/backend5_Test_local/backendProject  # 프로젝트 연결
     restart: unless-stopped
     networks:
       - prod_server
