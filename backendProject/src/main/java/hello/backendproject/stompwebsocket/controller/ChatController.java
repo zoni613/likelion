@@ -41,7 +41,7 @@ public class ChatController {
 
     @MessageMapping("/chat.sendMessage")
     public void sendmessage(ChatMessage message) throws JsonProcessingException {
-        /*
+        /* redis pub/sub을 활용하지 않을 경우
         // instanceName 확인 필요 시
         message.setMessage(instnasName + message.getMessage());
         if(message.getTo() != null && !message.getTo().isEmpty()) {

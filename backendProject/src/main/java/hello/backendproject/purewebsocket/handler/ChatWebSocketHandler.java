@@ -27,8 +27,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     // 클라이언트가 웹소켓서버에 접속했을 때 호출
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        super.afterConnectionEstablished(session);
-
         // 접속 시 sessions에 등록
         sessions.add(session);
 
@@ -38,8 +36,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     // 클러이언트가 보낸 메세지를 서버가 받았을 때 호출
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        super.handleTextMessage(session, message);
-
         // json 문자열 -> JAVA 객체
         ChatMessage chatMessage = objectMapper.readValue(message.getPayload(), ChatMessage.class);
 
@@ -74,8 +70,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     // 클러이언트가 연결이 끊어졌을 때 호출
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        super.afterConnectionClosed(session, status);
-
         sessions.remove(session);
 
         // 연결이 해제되면 소속되어 있는 방에서 제거
