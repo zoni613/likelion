@@ -54,6 +54,4 @@ public class Comment extends BaseTime {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> children = new ArrayList<>();
 
-
-
 }

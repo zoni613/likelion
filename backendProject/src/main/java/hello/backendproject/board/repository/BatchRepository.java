@@ -17,7 +17,7 @@ public class BatchRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public void batchInsert(List<BoardDTO> boardDTO){
+    public void batchInsert(List<BoardDTO> boardDTO) {
 
         String sql = "INSERT INTO board (title, content, user_id, created_date, updated_date,batchkey) VALUES (?, ?, ?, ?, ?,?)";
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
@@ -30,7 +30,6 @@ public class BatchRepository {
                 ps.setString(4, String.valueOf(dto.getCreated_date()));
                 ps.setString(5, String.valueOf(dto.getUpdated_date()));
                 ps.setString(6, dto.getBatchkey());
-
             }
 
             @Override
