@@ -1,8 +1,12 @@
 package hello.backendproject.user.entity;
 
 import hello.backendproject.auth.entity.Auth;
+import hello.backendproject.board.entity.Board;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -27,4 +31,9 @@ public class User {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Auth auth;
+
+    // 게시글 OneToMany
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Board> boards = new ArrayList<>();
+
 }

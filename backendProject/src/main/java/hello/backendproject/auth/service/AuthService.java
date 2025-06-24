@@ -3,10 +3,11 @@ package hello.backendproject.auth.service;
 import hello.backendproject.auth.dto.LoginRequestDTO;
 import hello.backendproject.auth.dto.SignUpRequestDTO;
 import hello.backendproject.user.dto.UserDTO;
+import hello.backendproject.user.dto.UserProfileDTO;
 import hello.backendproject.user.entity.User;
 import hello.backendproject.user.entity.UserProfile;
 import hello.backendproject.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -38,14 +39,13 @@ public class AuthService {
         profile.setUser(user);
         user.setUserProfile(profile);
 
-        System.out.println(user);
         userRepository.save(user);
     }
 
     @Transactional
     public UserDTO login(LoginRequestDTO dto){
         // 아이디 검사
-        User user = userRepository.findByUserid(dto.getUserid()).orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다.."));
+        User user = userRepository.findByUserid(dto.getUserid()).orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
 
         // 비밀번호 일치 검사
         if(!dto.getPassword().equals(user.getPassword())) {
@@ -57,10 +57,15 @@ public class AuthService {
         userDTO.setId(user.getId());
         userDTO.setUserid(user.getUserid());
 
-        userDTO.setUsername(user.getUserProfile().getUsername());
-        userDTO.setEmail(user.getUserProfile().getEmail());
-        userDTO.setPhone(user.getUserProfile().getPhone());
-        userDTO.setAddress(user.getUserProfile().getAddress());
+        // userDTO에 들어갈 userProfileDTO 생성
+        UserProfileDTO  profileDTO = new UserProfileDTO();
+        profileDTO.setUsername(user.getUserProfile().getUsername());
+        profileDTO.setEmail(user.getUserProfile().getEmail());
+        profileDTO.setPhone(user.getUserProfile().getPhone());
+        profileDTO.setAddress(user.getUserProfile().getAddress());
+
+        userDTO.setProfile(profileDTO);
+
         return userDTO;
     }
 

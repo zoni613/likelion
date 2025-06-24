@@ -129,9 +129,9 @@
 
         //방생성기능
         //방생성기능
-        fetch(`/api/rooms/${roomId}`, { method: "POST" })
+      fetch(`/api/rooms/${roomId}`, { method: "POST" })
 
-        //  const socket = new WebSocket('/ws-chat');
+      //  const socket = new WebSocket('/ws-chat');
         const socket = new WebSocket('/ws-chat?nickname=' + nickname);
         stompClient = Stomp.over(socket);
 
@@ -142,6 +142,7 @@
             document.getElementById("roomList").classList.add("hidden");
 
             document.getElementById("whisperRow").classList.remove("hidden"); // ✅ 여기!  닉네임 작성
+
 
             //일반채팅
             stompClient.subscribe(`/topic/room.${roomId}`, function (chat) {
@@ -156,6 +157,7 @@
             });
 
         });
+
 
     }
 

@@ -82,7 +82,7 @@
     let myName = "";
 
     function connectToRoom(room, nick) {
-         // const socket = new WebSocket('ws://localhost:8080/ws-gpt'); //로컬 테스트용
+        //  const socket = new WebSocket('ws://localhost:8080/ws-gpt'); //로컬 테스트용
         const socket = new WebSocket('/ws-gpt'); //도커 배포용
         stompClient = Stomp.over(socket);
 
