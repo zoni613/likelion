@@ -6,11 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hello.backendproject.board.dto.BoardDTO;
 import hello.backendproject.board.entity.Board;
 import hello.backendproject.board.service.BoardService;
+import hello.backendproject.security.core.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,7 +28,9 @@ public class BoardController {
      * 글 작성
      **/
     @PostMapping
-    public ResponseEntity<BoardDTO> createBoard(@RequestBody BoardDTO boardDTO) throws JsonProcessingException {
+    public ResponseEntity<BoardDTO> createBoard(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BoardDTO boardDTO) throws JsonProcessingException {
+        Long id = userDetails.getId();
+        boardDTO.setUser_id(id);
         System.out.println("boardDTO 값 " + new ObjectMapper().writeValueAsString(boardDTO));
         BoardDTO created = boardService.createBoard(boardDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -36,15 +40,18 @@ public class BoardController {
      * 게시글 상세 조회
      **/
     @GetMapping("/{id}")
-    public ResponseEntity<BoardDTO> getBoardDetail(@PathVariable Long id) {
-        return ResponseEntity.ok(boardService.getBoardDetail(id));
+    public ResponseEntity<BoardDTO> getBoardDetail(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
+        Long userId = userDetails.getId();
+        return ResponseEntity.ok(boardService.getBoardDetail(id, userId));
     }
 
     /**
      * 게시글 수정
      **/
     @PutMapping("/{id}")
-    public ResponseEntity<BoardDTO> updateBoard(@PathVariable Long id, @RequestBody BoardDTO boardDTO) {
+    public ResponseEntity<BoardDTO> updateBoard(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id, @RequestBody BoardDTO boardDTO) {
+        Long userId = userDetails.getId();
+        boardDTO.setUser_id(userId);
         return ResponseEntity.ok(boardService.updateBoard(id, boardDTO));
     }
 
@@ -52,8 +59,9 @@ public class BoardController {
      * 게시글 삭제
      **/
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long id) {
-        boardService.deleteBoard(id);
+    public ResponseEntity<Void> deleteBoard(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
+        Long userId = userDetails.getId();
+        boardService.deleteBoard(id, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -85,7 +93,7 @@ public class BoardController {
 
     /** 주석해제하기 front  **/
     //페이징 적용 검색
-    @GetMapping("/search")
+    @GetMapping("/elasticsearch")
     public Page<BoardDTO> search(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,

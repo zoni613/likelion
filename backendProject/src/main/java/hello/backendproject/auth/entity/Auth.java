@@ -27,4 +27,22 @@ public class Auth {
     @OneToOne(fetch = FetchType.LAZY) // 지연로딩 -> Auth 엔티티 조회할 때 user 객체는 불러오지 않음
     @JoinColumn(name = "user_id") // auth.getUser()에 실제로 접근할 때 User 쿼리 발생!
     private User user;
+
+    public Auth(User user, String refreshToken, String accessToken, String tokenType) {
+        this.user = user;
+        this.refreshToken = refreshToken;
+        this.accessToken = accessToken;
+        this.tokenType = tokenType;
+    }
+
+    // updateAccessToken 메서드 추가
+    //토큰값을 업데이트 해주는 메서드
+    public void updateAccessToken(String newAccessToken) {
+        this.accessToken = newAccessToken;
+    }
+
+    // updateRefreshToken 메서드 추가
+    public void updateRefreshToken(String newRefreshToken) {
+        this.refreshToken = newRefreshToken;
+    }
 }

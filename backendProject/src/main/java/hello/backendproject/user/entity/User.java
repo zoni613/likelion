@@ -2,6 +2,7 @@ package hello.backendproject.user.entity;
 
 import hello.backendproject.auth.entity.Auth;
 import hello.backendproject.board.entity.Board;
+import hello.backendproject.security.core.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +25,9 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+    
+    @Enumerated(EnumType.STRING) // 이 필드를 DB에 문자열로 저장하라는 의미
+    private Role role;
 
     // mappedBy: 나를 참조하고 있는 객체 이름
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

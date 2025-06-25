@@ -61,7 +61,10 @@ public class BoardService {
      * 게시글 상세 조회
      **/
     @Transactional(readOnly = true)
-    public BoardDTO getBoardDetail(Long boardId) {
+    public BoardDTO getBoardDetail(Long boardId, Long userId) {
+        if(userRepository.findById(userId).isEmpty()) {
+            throw new IllegalArgumentException("로그인 후 이용해주세요.");
+        }
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + boardId));
         return toDTO(board);
@@ -84,10 +87,16 @@ public class BoardService {
      * 게시글 삭제
      **/
     @Transactional
-    public void deleteBoard(Long boardId) {
-        if (!boardRepository.existsById(boardId))
-            throw new IllegalArgumentException("게시글 없음: " + boardId);
-        boardRepository.deleteById(boardId);
+    public void deleteBoard(Long boardId, Long userId) {
+//        if (!boardRepository.existsById(boardId))
+//            throw new IllegalArgumentException("게시글 없음: " + boardId);
+
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + boardId));
+        if(board.getUser().getId().equals(userId)) {
+            boardRepository.deleteById(boardId);
+        } else {
+            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+        }
     }
 
     /** 페이징 적용 전 **/

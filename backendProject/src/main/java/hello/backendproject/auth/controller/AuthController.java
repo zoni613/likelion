@@ -2,16 +2,19 @@ package hello.backendproject.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hello.backendproject.auth.dto.LoginRequestDTO;
+import hello.backendproject.auth.dto.LoginResponseDTO;
 import hello.backendproject.auth.dto.SignUpRequestDTO;
 import hello.backendproject.auth.service.AuthService;
 import hello.backendproject.user.dto.UserDTO;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -32,16 +35,44 @@ public class AuthController {
     }
 
     // 로그인
-    @PostMapping("/login")
-    public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO dto) {
-        try {
-            UserDTO loginUser = authService.login(dto);
+    @PostMapping("/loginSecurity")
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) {
+        LoginResponseDTO loginUser = authService.login(dto);
+        return ResponseEntity.ok(loginUser);
+    }
 
-            System.out.println("로그인 성공 = " + new ObjectMapper().writeValueAsString(loginUser));
+    /**
+     * 토큰 갱신 API
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestHeader(value = "Authorization", required = false)
+                                          String authorizationHeader, HttpServletRequest request) {
+        String refreshToken = null;
 
-            return ResponseEntity.ok(loginUser);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 반환
+        // 1. 쿠키에서 찾기
+        if(request.getCookies() != null) {
+            for(Cookie cookie : request.getCookies()) {
+                if("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                }
+            }
         }
+
+        // 2. Authorization 헤더 찾기
+        if(refreshToken == null && authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            refreshToken = authorizationHeader.replace("Bearer ", "").trim();
+        }
+
+        if(refreshToken == null || refreshToken.isEmpty()) {
+            throw new IllegalArgumentException("리프래시 토큰이 없습니다.");
+        }
+
+        String newAcessToken = authService.refreshToken(refreshToken);
+        //json 객체로 변환하여 front에 내려주기
+        Map<String, String> res = new HashMap<>();
+        res.put("accessToken", newAcessToken);
+        res.put("refreshToken", refreshToken);
+
+        return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 }
