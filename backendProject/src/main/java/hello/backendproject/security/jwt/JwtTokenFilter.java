@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -86,7 +84,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         // 추출한 id로 DB에서 사용자 정보 조회
         UserDetails userDetails = customUserService.loadUserById(userid);
 
-        System.out.println(userDetails.getAuthorities());
         return new UsernamePasswordAuthenticationToken(
                 userDetails, // 사용자 정보
                 null, // credential 영역인데 이미 인증이 된 상태이기 때문에 생략

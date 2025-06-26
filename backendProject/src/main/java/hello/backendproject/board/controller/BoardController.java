@@ -31,7 +31,6 @@ public class BoardController {
     public ResponseEntity<BoardDTO> createBoard(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BoardDTO boardDTO) throws JsonProcessingException {
         Long id = userDetails.getId();
         boardDTO.setUser_id(id);
-        System.out.println("boardDTO 값 " + new ObjectMapper().writeValueAsString(boardDTO));
         BoardDTO created = boardService.createBoard(boardDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -49,20 +48,19 @@ public class BoardController {
      * 게시글 수정
      **/
     @PutMapping("/{id}")
-    public ResponseEntity<BoardDTO> updateBoard(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id, @RequestBody BoardDTO boardDTO) {
+    public ResponseEntity<?> updateBoard(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id, @RequestBody BoardDTO boardDTO) {
         Long userId = userDetails.getId();
-        boardDTO.setUser_id(userId);
-        return ResponseEntity.ok(boardService.updateBoard(id, boardDTO));
+        return ResponseEntity.ok(boardService.updateBoard(id, userId, boardDTO));
     }
 
     /**
      * 게시글 삭제
      **/
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBoard(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
+    public ResponseEntity<?> deleteBoard(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
         Long userId = userDetails.getId();
         boardService.deleteBoard(id, userId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("게시글이 성공적으로 삭제되었습니다.");
     }
 
     //페이징 적용 전

@@ -63,8 +63,7 @@
 
     const userId = localStorage.getItem("user_id");
     //id 값으로 username 받아오기
-    // fetchWithAuth("/api/user/me", {
-    fetch("/api/user/me", {
+    fetchWithAuth("/api/user/me", {
         credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
         headers: (localStorage.getItem("accessToken"))
             ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }

@@ -74,7 +74,7 @@ public class AuthService {
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         }
 
-        // 위 비밀번호가 일치하면 기존 토큰 정보를 비교하고 토큰이 있으면 업데이트, 없으면 서로 발급
+        // 위 비밀번호가 일치하면 기존 토큰 정보를 비교하고 토큰이 있으면 업데이트, 없으면 새로 발급
         // 엑세스 토큰
         String accessToken = jwtTokenProvider.generateToken(new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), user.getPassword()), jwtAccessTokenExpirationTime);
 

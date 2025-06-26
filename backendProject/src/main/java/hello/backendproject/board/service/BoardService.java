@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,9 +75,14 @@ public class BoardService {
      * 게시글 수정
      **/
     @Transactional
-    public BoardDTO updateBoard(Long boardId, BoardDTO dto) {
+    public BoardDTO updateBoard(Long boardId, Long userId, BoardDTO dto) {
+
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + boardId));
+
+        if (!board.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("수정 권한이 없습니다.");
+        }
         board.setTitle(dto.getTitle());
         board.setContent(dto.getContent());
         boardRepository.save(board); //  해당 코드는 필요 없을 수도 있음. 영속성 안 entity가 변경됐기 때문
@@ -92,11 +98,10 @@ public class BoardService {
 //            throw new IllegalArgumentException("게시글 없음: " + boardId);
 
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + boardId));
-        if(board.getUser().getId().equals(userId)) {
-            boardRepository.deleteById(boardId);
-        } else {
+        if (!board.getUser().getId().equals(userId))
             throw new IllegalArgumentException("삭제 권한이 없습니다.");
-        }
+
+        boardRepository.deleteById(boardId);
     }
 
     /** 페이징 적용 전 **/

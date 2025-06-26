@@ -1,10 +1,15 @@
 package hello.backendproject.security.config;
 
+import hello.backendproject.oauth2.OAuth2LoginSuccessHandler;
+import hello.backendproject.oauth2.OAuth2LogoutSuccessHandler;
+import hello.backendproject.oauth2.OAuth2UserService;
+import hello.backendproject.oauth2.RedisOAuth2AuthorizationRequestRepository;
 import hello.backendproject.security.jwt.JwtTokenFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -13,6 +18,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -23,23 +30,51 @@ public class SecurityConfig {
 
     private final JwtTokenFilter jwtTokenFilter;
 
+    private final OAuth2LogoutSuccessHandler oAuth2LogoutSuccessHandler;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final OAuth2UserService oAuth2UserService;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    @Bean
+    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+        return new RedisOAuth2AuthorizationRequestRepository(redisTemplate);
+    }
+
     // 스프링 시큐리티에서 어떤 순서로 어떤 보안 규칙의 필터를 거치게 할지 정의하는 클래스
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 보호 기능 비활성화
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/", "*.html", "/favicon.ico", "/css/**", "/fetchWithAuth.js", "/js/**",
-                                "/images/**", "/.wll-kown/**").permitAll() // 인증 필요 없이 모두 허용
-                        .requestMatchers("/api/auth/**").permitAll() // 인증이 필요한 경로
-                        .requestMatchers("/api/user/**", "/boards/**", "/boards", "/api/comments", "/api/comments/**").authenticated() // 인증이 필요한 경로
+                                //인증 필요없음
+                                .requestMatchers("/","/index.html", "/*.html", "/favicon.ico",
+                                        "/css/**", "/fetchWithAuth.js","/js/**", "/images/**",
+                                        "/.well-known/**").permitAll() // 정적 리소스 누구나 접근
+                                .requestMatchers("/boards/**",  "/boards","/api/comments/**").authenticated()
+
+                                //인증필요
+                                .requestMatchers(
+                                        "/api/auth/**",       // 로그인/회원가입/로그아웃 등 인증 없이 사용
+//                        "/api/comments/**",   // 댓글 읽기 등 인증 없이 사용
+                                        "/oauth2/**",         // 소셜 로그인 엔드포인트는 누구나 접근
+                                        "/login/**",          // 스프링 시큐리티 내부 로그인 관련 엔드포인트
+                                        "/ws-gpt", "/ws-chat", // 웹소켓 핸드셰이크
+                                        "/actuator/prometheus", //프로메테우스
+                                        "/oauth/**"
+
+                                ).permitAll() // 웹소켓 핸드셰이크는 모두 허용!
+
+                                .requestMatchers(
+                                        "/api/user/**",
+                                        //  "/boards/**",
+                                        "/api/rooms/**"
+                                ).authenticated() //인증이 필요한 경로 // 인증이 필요한 경로
 
                 )
                 // 인증 실패 시 예외처리
                 .exceptionHandling(e -> e
                         // 인증 안 된 사용자 접근 시
                         .authenticationEntryPoint((request, response, authException) -> {
-                            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         })
                         // 인증은 되었지만 권한이 없을 시
@@ -57,6 +92,21 @@ public class SecurityConfig {
 
                 // 매 요청마다 적용할 필터
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
+
+                .oauth2Login(oauth2->oauth2
+                        .loginPage("/index.html")
+                        .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
+                        .successHandler(oAuth2LoginSuccessHandler)
+
+                        .authorizationEndpoint(authorization -> authorization
+                                .authorizationRequestRepository(authorizationRequestRepository()))
+                )
+
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessHandler(oAuth2LogoutSuccessHandler)
+                        .permitAll()
+                )
 
                 .build(); // 위 명시한 설정들을 적용
     }
