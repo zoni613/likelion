@@ -9,6 +9,7 @@ import hello.backendproject.security.jwt.JwtTokenProvider;
 import hello.backendproject.user.entity.User;
 import hello.backendproject.user.entity.UserProfile;
 import hello.backendproject.user.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OAuth2UserService extends DefaultOAuth2UserService {
@@ -78,9 +80,9 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
         }
 
-        System.out.println(provider + " 로그인 확인 userid = " + userid);
-        System.out.println(provider + " 로그인 확인 email = " + email);
-        System.out.println(provider + " 로그인 확인 username = " + username);
+        log.info(provider + " 로그인 확인 userid = " + userid);
+        log.info(provider + " 로그인 확인 email = " + email);
+        log.info(provider + " 로그인 확인 username = " + username);
 
         // 회원 정보가 DB에 존재하는지 확인
         User user = userRepository.findByUserid(userid).orElseGet(() -> {

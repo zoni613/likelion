@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +22,7 @@ import java.io.IOException;
 // OncePerRequestFilter는 한 요청 당 딱 한 번만 실행되는 필터 역할
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtTokenFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailService customUserService;
@@ -47,7 +49,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
             String url = request.getRequestURI().toString();
             String method = request.getMethod(); // GET, POST, PUT
-            System.out.println("[" + method + "] 현재 들어온 HTTP 요청: " + url);
+            log.info("[" + method + "] 현재 들어온 HTTP 요청: " + url);
+        } else {
+//            if(!request.getRequestURI().toString().contains("/actuator/prometheus"))
+//            log.warn("토큰이 유효하지 않습니다 {} {} ", accessToken, request.getRequestURI().toString());
         }
 
         /**

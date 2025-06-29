@@ -2,6 +2,7 @@ package hello.backendproject.purewebsocket.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hello.backendproject.purewebsocket.dto.ChatMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     // Session(id) 관리 객체 -> set: 중복, synchronizedSet -> 동시성 방지
@@ -30,7 +32,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // 접속 시 sessions에 등록
         sessions.add(session);
 
-        System.out.println("접속된 클라이언트 세션 ID =  " + session.getId());
+        log.info("접속된 클라이언트 세션 ID =  " + session.getId());
     }
 
     // 클러이언트가 보낸 메세지를 서버가 받았을 때 호출
@@ -53,7 +55,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             if(s.isOpen()) {
                 // json 문자로 변경해서 메세지를 보내준다.
                 s.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
-                System.out.println("전송된 메세지 = " + chatMessage.getMessage());
+                log.info("전송된 메세지 = " + chatMessage.getMessage());
             }
         }
         /* 방이 없을 경우
@@ -61,7 +63,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             if(s.isOpen()) {
                 // json 문자로 변경해서 메세지를 보내준다.
                 s.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
-                System.out.println("전송된 메세지 = " + chatMessage.getMessage());
+                log.info("전송된 메세지 = " + chatMessage.getMessage());
             }
         }
         */

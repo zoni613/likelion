@@ -36,7 +36,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String refreshToken = (String) attributes.get("refreshToken");
         String name = (String) attributes.get("name");
 
-        System.out.println("[OAuth2_LOG]" + "소셯 로그인 시도한 이름 = "+name);
+        log.info("[OAuth2_LOG]" + "소셯 로그인 시도한 이름 = "+name);
 
         // 사용자 ID를 안전하게 꺼내기 (null 체크 및 타입 캐스팅)
         Long id = null;

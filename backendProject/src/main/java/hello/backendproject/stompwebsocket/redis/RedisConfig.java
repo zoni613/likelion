@@ -25,6 +25,7 @@ public class RedisConfig {
     @Value("${spring.data.redis.port}")
     private int port;
 
+    // RedisMessageListenerContainer: Redis의 Pub/Sub 메시지를 수신할 수 있게 해주는 리스너 컨테이너
     @Bean
     public RedisMessageListenerContainer redisContainer(RedisConnectionFactory redisConnectionFactory) {
         RedisMessageListenerContainer Container = new RedisMessageListenerContainer();
@@ -37,6 +38,7 @@ public class RedisConfig {
 
     }
 
+    // redis에 연결할 팩토리 생성
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();

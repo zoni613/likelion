@@ -12,28 +12,13 @@ import java.time.Duration;
 
 @RequiredArgsConstructor
 public class RedisOAuth2AuthorizationRequestRepository implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
-
+// oAuth 로그인 시 세션이 발생하는데, 세션은 하나의 서버 내에서만 유효하여 서버 분산 환경에서 세션을 공유하기 위해 레디스에 정보 저장
+    
     // Redis에 저장할 때 사용할 key prefix (고유 식별자 역할)
     private static final String PREFIX = "oauth2_auth_request:";
 
     // RedisTemplate은 Spring에서 제공하는 Redis 클라이언트
     private final RedisTemplate<String, Object> redisTemplate;
-
-//    public RedisOAuth2AuthorizationRequestRepository(RedisTemplate<String, Object> redisTemplate) {
-//        this.redisTemplate = redisTemplate;
-//    }
-
-    // 인가 요청 불러오는 메서드
-    @Override
-    public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-        // 요청 파라미터에서 state 값을 가져옴 (OAuth2의 CSRF 방지 토큰 역할)
-        String state = request.getParameter("state");
-        if (state == null) return null;
-
-        // Redis에서 해당 state 값을 가진 AuthorizationRequest 조회
-        return (OAuth2AuthorizationRequest) redisTemplate.opsForValue().get(PREFIX + state);
-    }
-
 
     // 완료된 인가 요청 저장
     @Override
@@ -52,6 +37,17 @@ public class RedisOAuth2AuthorizationRequestRepository implements AuthorizationR
                         state,
                 authorizationRequest,
                 Duration.ofMinutes(10)); // 인증된 정보를 10분 동안 유지
+    }
+
+    // 인가 요청 불러오는 메서드
+    @Override
+    public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
+        // 요청 파라미터에서 state 값을 가져옴 (OAuth2의 CSRF 방지 토큰 역할)
+        String state = request.getParameter("state");
+        if (state == null) return null;
+
+        // Redis에서 해당 state 값을 가진 AuthorizationRequest 조회
+        return (OAuth2AuthorizationRequest) redisTemplate.opsForValue().get(PREFIX + state);
     }
 
     /**

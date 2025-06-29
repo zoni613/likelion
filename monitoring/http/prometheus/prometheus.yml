@@ -1,5 +1,5 @@
 global:
-  scrape_interval: 5s
+  scrape_interval: 60s
 
 scrape_configs:
   - job_name: 'springboot'
@@ -7,7 +7,7 @@ scrape_configs:
     static_configs:
       - targets:
           - 'host.docker.internal:8080' #도커 컨테이너가 로컬 호스트를 바라보는 공식 DNS 이름
-          - 'localhost:8080' # 여기서의 localhost는 prometheus 도커 자신
+#          - 'localhost:8080' # 여기서의 localhost는 prometheus 도커 자신
 #          - 'backend1:8080'
 #          - 'backend2:8080'
 #          - 'backend3:8080'

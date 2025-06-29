@@ -76,7 +76,6 @@ public class BoardService {
      **/
     @Transactional
     public BoardDTO updateBoard(Long boardId, Long userId, BoardDTO dto) {
-
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + boardId));
 
@@ -86,6 +85,7 @@ public class BoardService {
         board.setTitle(dto.getTitle());
         board.setContent(dto.getContent());
         boardRepository.save(board); //  해당 코드는 필요 없을 수도 있음. 영속성 안 entity가 변경됐기 때문
+
         return toDTO(board);
     }
 
@@ -199,7 +199,7 @@ public class BoardService {
         }
 
         long end = System.currentTimeMillis();
-        System.out.println("JPA Board saveAll 저장 소요 시간(ms): " + (end - start));
+        log.info("JPA Board saveAll 저장 소요 시간(ms): " + (end - start));
     }
 }
 
