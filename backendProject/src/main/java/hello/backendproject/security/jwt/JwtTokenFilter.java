@@ -2,6 +2,7 @@ package hello.backendproject.security.jwt;
 
 import hello.backendproject.security.core.CustomUserDetailService;
 import hello.backendproject.security.core.CustomUserDetails;
+import hello.backendproject.threadlocal.TraceIdHolder;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 // JwtTokenFilter 모든 HTTP 요청을 가로채서 JWT 토큰을 검사하는 필터 역할
 // OncePerRequestFilter는 한 요청 당 딱 한 번만 실행되는 필터 역할
@@ -33,38 +36,49 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                                     HttpServletResponse response, // http 응답
                                     FilterChain filterChain
     ) throws ServletException, IOException {
-        String accessToken = getTokenFromRequest(request); // 요청 헤더에서 토큰 추출
 
-        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) { // 토큰이 있고, 유효할 때
+        try {
+            // HTTP 요청이 시작되는 구간에서 TraceId 발급
+            String traceId = UUID.randomUUID().toString().substring(0, 8);
+            TraceIdHolder.set(traceId); // TraceId ThreadLocal에 저장
 
-            // 토큰에서 사용자를 꺼내서 담은 사용자 인증 객체
-            UsernamePasswordAuthenticationToken authenticationToken = getAuthentication(accessToken);
+            String accessToken = getTokenFromRequest(request); // 요청 헤더에서 토큰 추출
 
-            // http요청으로브터 부가 정보(ip, 세션 등)를 추출해 사용자 인증 객체에 넣어줌
-            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) { // 토큰이 있고, 유효할 때
+
+                // 토큰에서 사용자를 꺼내서 담은 사용자 인증 객체
+                UsernamePasswordAuthenticationToken authenticationToken = getAuthentication(accessToken);
+
+                // http요청으로브터 부가 정보(ip, 세션 등)를 추출해 사용자 인증 객체에 넣어줌
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
 
-            // 토큰에서 사용자 인증정보를 조회해 현재 스레드에 인증된 사용자로 등록
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                // 토큰에서 사용자 인증정보를 조회해 현재 스레드에 인증된 사용자로 등록
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
-            String url = request.getRequestURI().toString();
-            String method = request.getMethod(); // GET, POST, PUT
-            log.info("[" + method + "] 현재 들어온 HTTP 요청: " + url);
-        } else {
-//            if(!request.getRequestURI().toString().contains("/actuator/prometheus"))
-//            log.warn("토큰이 유효하지 않습니다 {} {} ", accessToken, request.getRequestURI().toString());
+                String url = request.getRequestURI().toString();
+                String method = request.getMethod(); // GET, POST, PUT
+                log.info("[" + method + "] 현재 들어온 HTTP 요청: " + url);
+            } else {
+    //            if(!request.getRequestURI().toString().contains("/actuator/prometheus"))
+    //            log.warn("토큰이 유효하지 않습니다 {} {} ", accessToken, request.getRequestURI().toString());
+            }
+
+            /**
+             * CharactorEncodingFilter: 문자 인코딩 처리
+             * CorsFilter: 정책 처리
+             * CsrfFilter: 보안 처리
+             * JWTTokenFilter: JWT 토큰 처리(핵심)
+             * SecurityContextFilter: 인증/인가 정보 저장
+             * ExceptionFilter: 예외처리
+             * */
+
+            filterChain.doFilter(request, response); // JwtTokenFilter를 거쳐 다음 필터로 넘김
         }
-
-        /**
-         * CharactorEncodingFilter: 문자 인코딩 처리
-         * CorsFilter: 정책 처리
-         * CsrfFilter: 보안 처리
-         * JWTTokenFilter: JWT 토큰 처리(핵심)
-         * SecurityContextFilter: 인증/인가 정보 저장
-         * ExceptionFilter: 예외처리
-         * */
-
-        filterChain.doFilter(request, response); // JwtTokenFilter를 거쳐 다음 필터로 넘김
+        finally {
+            // HTTP 요청이 끝날 때 TreadLocal 데이터를 비워줌
+            TraceIdHolder.clear(); // ThreadLocal에 데이터 지우기
+        }
     }
 
     // HTTP 요청 헤더에서 토큰을 추출하는 메서드

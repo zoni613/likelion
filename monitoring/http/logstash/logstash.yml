@@ -1,2 +1,2 @@
-http.host: "0.0.0.0"
-xpack.monitoring.elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+http.host: "0.0.0.0" #모든 IP 주소 접속을 허용
+xpack.monitoring.elasticsearch.hosts: [ "http://elasticsearch:9200" ] # Logstash가 모니터링 데이터를 보낼 Elasticsearch 주소 지정

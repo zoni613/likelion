@@ -91,7 +91,7 @@ public class BoardController {
 
     /** 주석해제하기 front  **/
     //페이징 적용 검색
-    @GetMapping("/elasticsearch")
+    @GetMapping("/search")
     public Page<BoardDTO> search(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
