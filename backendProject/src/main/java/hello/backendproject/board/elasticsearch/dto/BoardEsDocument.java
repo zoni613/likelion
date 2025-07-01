@@ -1,6 +1,7 @@
 package hello.backendproject.board.elasticsearch.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hello.backendproject.board.dto.BoardDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -27,6 +28,8 @@ public class BoardEsDocument {
     private Long userId;
     private String create_date;
     private String update_date;
+    @JsonProperty("view_count")
+    private Long viewCount = 0L;
 
     public static BoardEsDocument from(BoardDTO dto) {
         // BoardDTO를 받아서 엘라스틱서치 DTO를 변환
@@ -38,6 +41,7 @@ public class BoardEsDocument {
                 .userId(dto.getUser_id())
                 .create_date(dto.getCreated_date() != null ? dto.getCreated_date().toString() : null)
                 .update_date(dto.getUpdated_date() != null ? dto.getUpdated_date().toString() : null)
+                .viewCount(dto.getViewCount())
                 .build();
     }
 

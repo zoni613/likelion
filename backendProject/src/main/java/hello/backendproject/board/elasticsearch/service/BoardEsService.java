@@ -1,6 +1,7 @@
 package hello.backendproject.board.elasticsearch.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
@@ -73,7 +74,7 @@ public class BoardEsService {
                      * must_not: 해당 조건을 맞고하면 제외
                      * filter : must와 같지만 점수 계산 안함 (속도가 빠름)
                      */
-                    
+
                     // 접두어 글자 검색
                     b.should(PrefixQuery.of(p -> p.field("title").value(keyword))._toQuery());
                     b.should(PrefixQuery.of(p -> p.field("content").value(keyword))._toQuery());
@@ -89,9 +90,9 @@ public class BoardEsService {
                     // fuzziness: "AUTO"는  오타 허용 검색 기능을 자동으로 켜주는 설정 -> 유사도 계산을 매번 수행하기 때문에 느림
                     //짧은 키워드에는 사용 xxx
                     //오타 허용 (오타허용은 match만 가능 )
-                    if (keyword.length()>=3){
-                        b.should(MatchQuery.of(m ->m.field("title").query(keyword).fuzziness("AUTO"))._toQuery());
-                        b.should(MatchQuery.of(m ->m.field("content").query(keyword).fuzziness("AUTO"))._toQuery());
+                    if (keyword.length() >= 3) {
+                        b.should(MatchQuery.of(m -> m.field("title").query(keyword).fuzziness("AUTO"))._toQuery());
+                        b.should(MatchQuery.of(m -> m.field("content").query(keyword).fuzziness("AUTO"))._toQuery());
                     }
 
                     return b;
@@ -131,13 +132,13 @@ public class BoardEsService {
             throw new RuntimeException("검색 중 오류 발생", e);
         }
     }
-    
+
     // 문서 리스트를 받아서 엘라스틱서치에 bulk색인하는 메서드
     public void bulkIndexInsert(List<BoardEsDocument> documents) throws IOException {
         // 한 번에 처리할 묶음(batch) 크기를 설정
         int batchSize = 1000;
 
-        for (int i = 0; i < documents.size(); i+=batchSize) {
+        for (int i = 0; i < documents.size(); i += batchSize) {
             // 현재 batch의 끝 인덱스를 구함
             int end = Math.min(documents.size(), i + batchSize);
 
@@ -162,14 +163,45 @@ public class BoardEsService {
             BulkResponse response = client.bulk(br.build());
 
             // 벌크 작업 중 에러가 있는 경우 로그 출력
-            if(response.errors()) {
-                for(BulkResponseItem item: response.items()) {
-                    if(item.error() != null) {
+            if (response.errors()) {
+                for (BulkResponseItem item : response.items()) {
+                    if (item.error() != null) {
                         // 실패한 문서의 ID와 여러 내용을 출력
                         log.error("엘라스틱서치 벌크 색인 작업 중 오류 실패 {}, 오류: {}", item.id(), item.error());
                     }
                 }
             }
         }
+    }
+
+    public List<String> getTopSearchKeyword() {
+        // TemsAggregation = 엘라스틱서치의 집계 메서드
+        TermsAggregation termsAggregation = TermsAggregation.of(t -> t
+                .field("keyword.keyword") // 집계 기준 필드
+                .size(10)); // 상위 10개만 불러오기
+
+        // 짐계 요청
+        SearchRequest request = SearchRequest.of(s -> s
+                .index("search-log-index") // 짐계를 가져올 인덱스 이름
+                .size(0) // 집계만 가져오고 검색 결과는 가져오지 않음
+                .aggregations("top_keywords", a -> a.terms(termsAggregation)) // 인기 검색어 집계
+        );
+
+        try {
+            // 집계 응답
+            SearchResponse<Void> response = client.search(request, Void.class);
+            return response.aggregations() // 응답 결과에서 집계 결과만 꺼냄
+                    .get("top_keywords") // 위에서 내가 집계요청한 이름
+                    .sterms() // String terms로 변환
+                    .buckets() // 집계 결과 버킷 리스트
+                    .array() // 배열로 변환
+                    .stream() // 스트림으로 변환
+                    .map(bucket -> bucket.key().stringValue()) // 버킷의 ket값을 문자열로 꺼냄
+                    .map(Object::toString) // string으로 변환
+                    .collect(Collectors.toList()); // 스트림 결과를 리스트로 모아서 반환
+        } catch (IOException e) {
+            throw new RuntimeException("검색어 통계 조회 중 오류 발생", e);
+        }
+
     }
 }

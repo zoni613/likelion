@@ -80,13 +80,25 @@ public class BoardService {
     /**
      * 게시글 상세 조회
      **/
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
+    @Transactional
     public BoardDTO getBoardDetail(Long boardId, Long userId) {
         if(userRepository.findById(userId).isEmpty()) {
             throw new IllegalArgumentException("로그인 후 이용해주세요.");
         }
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + boardId));
+
+        // mysql 조회수 증가
+        board.setViewCount(board.getViewCount() + 1);
+
+        // es 조회수 증가
+        BoardEsDocument esDocument = boardEsRepository.findById(String.valueOf(boardId))
+                .orElseThrow(() -> new IllegalArgumentException("ES에 게시글 없음 : " + boardId));
+
+        esDocument.setViewCount(board.getViewCount());
+        boardEsService.save(esDocument);
+
         return toDTO(board);
     }
 
@@ -186,6 +198,7 @@ public class BoardService {
 
         dto.setCreated_date(board.getCreated_date());
         dto.setUpdated_date(board.getUpdated_date());
+        dto.setViewCount(board.getViewCount());
         return dto;
     }
 
