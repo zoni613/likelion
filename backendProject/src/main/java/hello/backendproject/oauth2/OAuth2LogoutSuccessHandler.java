@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -19,7 +20,8 @@ public class OAuth2LogoutSuccessHandler implements LogoutSuccessHandler {
     // 로그아웃을 커스텀으로 구현하고 싶을 때 사용하는 인터페이스
 
     // 카카오 REST API 키 (환경변수나 properties에서 가져오세요)
-    private final String kakaoClientId = "";
+    @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
+    private String kakaoClientId;
     private final String kakaoLogoutRedirectUri = "http://localhost:8080/login.html"; // 앱 환경에 맞게 변경
 
     @Override
